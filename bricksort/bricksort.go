@@ -10,8 +10,6 @@ import (
 //
 // It takes an array as an input.
 // It returns the input array sorted.
-//
-// TODO: Implement
 func Sort(arr []int) []int {
 	var waitGroup sync.WaitGroup // Wait group to synchronize parallel goroutines
 	var isSorted bool = false    // True if there weren't any swaps for an iter
