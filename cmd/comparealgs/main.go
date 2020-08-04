@@ -29,8 +29,8 @@ Usage:
 %s [inputFile outputFile]
 
 Options:
-	inputFile	Input file's path
-	outputFile	Output file's path
+    inputFile   Input file's path
+    outputFile  Output file's path
 `
 
 // Error codes
