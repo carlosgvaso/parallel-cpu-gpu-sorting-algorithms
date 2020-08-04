@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-// Sort sorts an array using the parallel brick sort algorithm.
+// Sort sorts an array in place using the parallel brick sort algorithm.
 //
 // It takes an array as an input.
 // It returns the input array sorted.
