@@ -163,6 +163,7 @@ func main() {
 
 	// Calculate average
 	execTimeAvgBrickSort = execTimeAvgBrickSort / runs
+	fmt.Printf("\t\tExec time avg: %dns\n", execTimeAvgBrickSort)
 	fmt.Fprintf(fout, "%d\n", execTimeAvgBrickSort)
 
 	// Close output file
