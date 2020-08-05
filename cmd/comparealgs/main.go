@@ -159,6 +159,9 @@ func main() {
 			// Add all times to average them
 			execTimeAvgBrickSort += int(execTime)
 		}
+
+		// Copy arrIn to arrOut for the next iteration
+		copy(arrOut, arrIn)
 	}
 
 	// Calculate average
