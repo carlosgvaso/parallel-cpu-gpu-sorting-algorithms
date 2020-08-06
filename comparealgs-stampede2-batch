@@ -13,8 +13,9 @@
 # Job to run
 echo "Date: $(date)"
 echo "Working directory: $(pwd)"
+echo "System: stampede2, knl, 1node, 1procpernode, 68coresperproc, 4thspercore, 272threads"
 echo "Module list:"
 module list
 echo "Running job..."
-~/go/bin/comparealgs input_n_1K.txt output_n_1K.txt
+~/go/bin/comparealgs input_1K.txt output_1K.txt
 echo "Done"
