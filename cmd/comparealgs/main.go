@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime"
 	"strconv"
 	"sync"
 	"time"
@@ -131,8 +132,11 @@ func main() {
 	var execTimeAvgBrickSort int = 0
 
 	// Print problem parameters
-	fmt.Printf("Problem size: n = %d\n", n)
-	fmt.Fprintf(fout, "n = %d\narrIn = %v\nTimes measured in nsec\n\n", n, arrIn)
+	cores := runtime.NumCPU()
+	fmt.Printf("Input file: %s\nOutput file: %s\nLogical CPUs: %d\nProblem size: n = %d\n",
+		inFile, outFile, cores, n)
+	fmt.Fprintf(fout, "Input = %s\nOutput = %s\nTimes measured in nsec\ncores = %d\nn = %d\narrIn = %v\n\n",
+		inFile, outFile, cores, n, arrIn)
 
 	// Print header
 	fmt.Fprintf(fout, "Algorithm,")
