@@ -24,14 +24,18 @@ var inFile string = "input.txt"
 // Runs is the number of times each algorithm is run to average execution time
 var runs int = 10
 
+// FreeProcs is the number of processor cores to leave free (not use in parallel)
+var freeProcs int = 2
+
 // Usage contains the usage informations
 var usage string = `
 Usage:
-%s [inputFile outputFile]
+%s [inputFile outputFile procs]
 
 Options:
     inputFile   Input file's path
     outputFile  Output file's path
+    procs       Maximum number of CPUs to use in parallel
 `
 
 // Error codes
@@ -108,15 +112,23 @@ func readInput(inFile string) ([]int, []int, int) {
 func main() {
 	argv := os.Args
 	argc := len(argv)
+	var procs int = 0
+	var err error
 
 	// Check command-line arguments
-	if argc != 3 && argc != 1 {
+	if argc != 4 && argc != 1 {
 		fmt.Printf("ERROR: Wrong number of arguments provided\n")
 		fmt.Printf(usage, argv[0])
 		os.Exit(exitArg)
-	} else if argc == 3 {
+	} else if argc == 4 {
 		inFile = argv[1]
 		outFile = argv[2]
+		procs, err = strconv.Atoi(argv[3])
+		if err != nil {
+			fmt.Printf("ERROR: Could not parse last argument\n")
+			fmt.Printf(usage, argv[0])
+			os.Exit(exitArg)
+		}
 	}
 
 	// Read the input file
@@ -133,10 +145,14 @@ func main() {
 
 	// Print problem parameters
 	cores := runtime.NumCPU()
-	fmt.Printf("Input file: %s\nOutput file: %s\nLogical CPUs: %d\nProblem size: n = %d\n",
-		inFile, outFile, cores, n)
-	fmt.Fprintf(fout, "Input = %s\nOutput = %s\nTimes measured in nsec\ncores = %d\nn = %d\narrIn = %v\n\n",
-		inFile, outFile, cores, n, arrIn)
+	if procs == 0 {
+		procs = cores - freeProcs
+	}
+	runtime.GOMAXPROCS(procs)
+	fmt.Printf("Input file: %s\nOutput file: %s\nLogical CPUs: %d\nMax procs: %d\nProblem size: n = %d\n",
+		inFile, outFile, cores, procs, n)
+	fmt.Fprintf(fout, "Input = %s\nOutput = %s\nTimes measured in nsec\ncores = %d\nmaxProcs = %d\nn = %d\narrIn = %v\n\n",
+		inFile, outFile, cores, procs, n, arrIn)
 
 	// Print header
 	fmt.Fprintf(fout, "Algorithm,")
