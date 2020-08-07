@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/carlosgvaso/parallel-sort/bricksort"
+	"github.com/carlosgvaso/parallel-sort/quicksort"
 )
 
 // OutFile is the output file's path
@@ -140,9 +140,6 @@ func main() {
 		log.Fatalln("Could not open the output file", err)
 	}
 
-	// Setup variables to calculate the execution time averages
-	var execTimeAvgBrickSort int = 0
-
 	// Print problem parameters
 	cores := runtime.NumCPU()
 	if procs == 0 {
@@ -161,14 +158,18 @@ func main() {
 	}
 	fmt.Fprintf(fout, "ExecTimeAvg\n")
 
-	// Run Brick Sort
+	// Run brick sort
 	fmt.Printf("\tBrick Sort:\n")
-	fmt.Fprintf(fout, "BrickSort,")
+	fmt.Fprintf(fout, "bricksort,")
 
+	// Setup variables to calculate the execution time averages
+	var execTimeAvg int = 0
+
+	// Run benchmarks
 	for i := 0; i <= runs; i++ {
 		// Brick sort sorts in place, so pass arrOut to preserve arrIn
 		startTime := time.Now()
-		arrOut = bricksort.Sort(arrOut)
+		arrOut = quicksort.Sort(arrOut)
 		execTime := time.Since(startTime)
 
 		// Ignore the first run because it is always artificially slower
@@ -177,7 +178,7 @@ func main() {
 			fmt.Fprintf(fout, "%d,", int(execTime))
 
 			// Add all times to average them
-			execTimeAvgBrickSort += int(execTime)
+			execTimeAvg += int(execTime)
 		}
 
 		// Copy arrIn to arrOut for the next iteration
@@ -185,9 +186,41 @@ func main() {
 	}
 
 	// Calculate average
-	execTimeAvgBrickSort = execTimeAvgBrickSort / runs
-	fmt.Printf("\t\tExec time avg: %dns\n", execTimeAvgBrickSort)
-	fmt.Fprintf(fout, "%d\n", execTimeAvgBrickSort)
+	execTimeAvg = execTimeAvg / runs
+	fmt.Printf("\t\tExec time avg: %dns\n", execTimeAvg)
+	fmt.Fprintf(fout, "%d\n", execTimeAvg)
+
+	// Run quicksort
+	fmt.Printf("\tQuicksort:\n")
+	fmt.Fprintf(fout, "quickSort,")
+
+	// Setup variables to calculate the execution time averages
+	execTimeAvg = 0
+
+	// Run benchmarks
+	for i := 0; i <= runs; i++ {
+		// Quicksort sorts in place, so pass arrOut to preserve arrIn
+		startTime := time.Now()
+		arrOut = quicksort.Sort(arrOut)
+		execTime := time.Since(startTime)
+
+		// Ignore the first run because it is always artificially slower
+		if i > 0 {
+			fmt.Printf("\t\tExec time %d: %s\n", i, execTime)
+			fmt.Fprintf(fout, "%d,", int(execTime))
+
+			// Add all times to average them
+			execTimeAvg += int(execTime)
+		}
+
+		// Copy arrIn to arrOut for the next iteration
+		copy(arrOut, arrIn)
+	}
+
+	// Calculate average
+	execTimeAvg = execTimeAvg / runs
+	fmt.Printf("\t\tExec time avg: %dns\n", execTimeAvg)
+	fmt.Fprintf(fout, "%d\n", execTimeAvg)
 
 	// Close output file
 	fout.Close()
