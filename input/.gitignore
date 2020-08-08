@@ -1,0 +1,4 @@
+# Input gitignore
+
+## Input and data files inside directory
+input*.txt

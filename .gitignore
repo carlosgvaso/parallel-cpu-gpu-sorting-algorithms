@@ -1,8 +1,8 @@
 # Global gitignore
 
-## Input and output data files
-input*.txt
-output*.txt
+## Input and output data files in root directory
+/input*.txt
+/output*.txt
 
 ## Go rules
 ### Binaries for programs and plugins
