@@ -17,19 +17,22 @@ import (
 	"github.com/carlosgvaso/parallel-sort/quicksort"
 )
 
-// OutFile is the output file's path
+// OutFile is the output file's path.
 var outFile string = "output.txt"
 
-// InFile is the input file's path
+// InFile is the input file's path.
 var inFile string = "input.txt"
 
-// Runs is the number of times each algorithm is run to average execution time
+// Runs is the number of times each algorithm is run to average execution time.
 var runs int = 1000
 
-// FreeProcs is the number of processor cores to leave free (not use in parallel)
+// SleepTime is the time in seconds to sleep between runs to let the CPUs cool down.
+var sleepTime time.Duration = 5
+
+// FreeProcs is the number of processor cores to leave free (not use in parallel).
 var freeProcs int = 2
 
-// Error codes
+// Error codes.
 var exitOk int = 0  // Exit without errors
 var exitArg int = 1 // Exit bad arguments
 var exitErr int = 2 // Exit unknown error
@@ -167,6 +170,9 @@ func main() {
 
 		// Copy arrIn to arrOut for the next iteration
 		copy(arrOut, arrIn)
+
+		// Sleep between runs to let the CPUs cool down
+		time.Sleep(sleepTime * time.Second)
 	}
 
 	// Calculate average
@@ -199,6 +205,9 @@ func main() {
 
 		// Copy arrIn to arrOut for the next iteration
 		copy(arrOut, arrIn)
+
+		// Sleep between runs to let the CPUs cool down
+		time.Sleep(sleepTime * time.Second)
 	}
 
 	// Calculate average

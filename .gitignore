@@ -3,6 +3,7 @@
 ## Input and output data files in root directory
 /input*.txt
 /output*.txt
+/comparealgs*.txt
 
 ## Go rules
 ### Binaries for programs and plugins
