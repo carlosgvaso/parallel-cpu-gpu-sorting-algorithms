@@ -1,32 +1,27 @@
 // Package arraygenerator provides a utility to generate an array of n
-// pseudo-random integers in range [0, 999], which it saves to file.
+// pseudo-random integers in range [minInt, maxInt], which it saves to file.
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"math/rand"
 	"os"
-	"strconv"
 	"time"
 )
 
 // OutFile is the output file's path
 var outFile string = "output.txt"
 
+// N is the length of the output array
+var n int = 100
+
 // MaxInt is the maximum integer value allowed in any entry of the output array
 var maxInt int = 999
 
-// Usage contains the usage informations
-var usage string = `
-Usage:
-%s n [-h] [outputFile]
-
-Options:
-    -h --help   Print usage information
-    n           Length of array as int
-    outputFile  Output file's path
-`
+// MinInt is the minimum integer value allowed in any entry of the output array
+var minInt int = 0
 
 // Error codes
 var exitOk int = 0  // Exit without errors
@@ -62,36 +57,26 @@ func writeOutput(outFile string, arrOut []int) {
 //
 // It saves the results to the specified file, or the default filename.
 func main() {
-	argv := os.Args
-	argc := len(argv)
-
 	// Check command-line arguments
-	var n int = 0
-	var err error
-	switch argc {
-	case 2: // If -h flag, print usage; else, save int to n
-		if argv[1] == "-h" || argv[1] == "--help" {
-			fmt.Printf(usage, argv[0])
-			os.Exit(exitOk)
-		} else {
-			n, err = strconv.Atoi(argv[1])
-			if err != nil {
-				fmt.Printf("Could not parse the array length, n\n")
-				fmt.Printf(usage, argv[0])
-				os.Exit(exitArg)
-			}
-		}
-	case 3: // Use 2 args for n and  outFile in this order
-		n, err = strconv.Atoi(argv[1])
-		if err != nil {
-			fmt.Printf("Could not parse the array length, n\n")
-			fmt.Printf(usage, argv[0])
-			os.Exit(exitArg)
-		}
-		outFile = argv[2]
-	default: // Wrong number of args provided
-		fmt.Printf("ERROR: Wrong number of arguments provided\n")
-		fmt.Printf(usage, argv[0])
+	nPtr := flag.Int("n", n, "Length of output array")
+	maxIntPtr := flag.Int("max", maxInt, "Maximum value of any array entry")
+	minIntPtr := flag.Int("min", minInt, "Minimum value of any array entry")
+	outFilePtr := flag.String("output", outFile, "Output file's path")
+	flag.Parse()
+
+	n = *nPtr
+	maxInt = *maxIntPtr
+	minInt = *minIntPtr
+	outFile = *outFilePtr
+
+	if maxInt <= 0 {
+		fmt.Printf("ERROR: max must be > 0\n")
+		os.Exit(exitArg)
+	} else if minInt < 0 {
+		fmt.Printf("ERROR: min must be >= 0\n")
+		os.Exit(exitArg)
+	} else if minInt > maxInt {
+		fmt.Printf("ERROR: max must be >= min\n")
 		os.Exit(exitArg)
 	}
 
@@ -101,7 +86,7 @@ func main() {
 	// Fill array with pseudo-random integers in range [0, maxInt]
 	rand.Seed(time.Now().UnixNano()) // Get seed value from the clock
 	for i := 0; i < n; i++ {
-		arrOut[i] = rand.Intn(maxInt)
+		arrOut[i] = minInt + rand.Intn(maxInt-minInt+1)
 	}
 
 	// Write arrOut to file

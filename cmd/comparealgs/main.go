@@ -4,6 +4,7 @@ package main
 
 import (
 	"encoding/csv"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -23,22 +24,10 @@ var outFile string = "output.txt"
 var inFile string = "input.txt"
 
 // Runs is the number of times each algorithm is run to average execution time
-var runs int = 10
+var runs int = 1000
 
 // FreeProcs is the number of processor cores to leave free (not use in parallel)
 var freeProcs int = 2
-
-// Usage contains the usage informations
-var usage string = `
-Usage:
-%s [-h] [inputFile outputFile procs]
-
-Options:
-    -h --help   Print usage information
-    inputFile   Input file's path
-    outputFile  Output file's path
-    procs       Maximum number of CPUs to use in parallel
-`
 
 // Error codes
 var exitOk int = 0  // Exit without errors
@@ -112,37 +101,23 @@ func readInput(inFile string) ([]int, []int, int) {
 //
 // It saves the results to the specified file, or the default filename.
 func main() {
-	argv := os.Args
-	argc := len(argv)
+	//argv := os.Args
+	//argc := len(argv)
 	var procs int = 0
 	var err error
+	cores := runtime.NumCPU()
 
 	// Check command-line arguments
-	switch argc {
-	case 1: // Using default inFile, outFile and procs; no need to do anything
-	case 2: // If -h flag, print usage
-		if argv[1] == "-h" || argv[1] == "--help" {
-			fmt.Printf(usage, argv[0])
-			os.Exit(exitOk)
-		} else {
-			fmt.Printf("ERROR: Wrong argument provided\n")
-			fmt.Printf(usage, argv[0])
-			os.Exit(exitArg)
-		}
-	case 4: // Use 3 args for inFile, outFile and procs in this order
-		inFile = argv[1]
-		outFile = argv[2]
-		procs, err = strconv.Atoi(argv[3])
-		if err != nil {
-			fmt.Printf("ERROR: Could not parse last argument\n")
-			fmt.Printf(usage, argv[0])
-			os.Exit(exitArg)
-		}
-	default: // Wrong number of args provided
-		fmt.Printf("ERROR: Wrong number of arguments provided\n")
-		fmt.Printf(usage, argv[0])
-		os.Exit(exitArg)
-	}
+	inFilePtr := flag.String("input", inFile, "Input file's path")
+	outFilePtr := flag.String("output", outFile, "Output file's path")
+	procsPtr := flag.Int("procs", (cores - freeProcs), "Maximum number of CPUs to use in parallel")
+	runsPtr := flag.Int("runs", runs, "Number of times each algorithm is run to average execution time")
+	flag.Parse()
+
+	inFile = *inFilePtr
+	outFile = *outFilePtr
+	procs = *procsPtr
+	runs = *runsPtr
 
 	// Read the input file
 	arrIn, arrOut, n := readInput(inFile)
@@ -154,15 +129,11 @@ func main() {
 	}
 
 	// Print problem parameters
-	cores := runtime.NumCPU()
-	if procs == 0 {
-		procs = cores - freeProcs
-	}
 	runtime.GOMAXPROCS(procs)
-	fmt.Printf("Input file: %s\nOutput file: %s\nLogical CPUs: %d\nMax procs: %d\nProblem size: n = %d\n",
-		inFile, outFile, cores, procs, n)
-	fmt.Fprintf(fout, "Input = %s\nOutput = %s\nTimes measured in nsec\ncores = %d\nmaxProcs = %d\nn = %d\narrIn = %v\n\n",
-		inFile, outFile, cores, procs, n, arrIn)
+	fmt.Printf("Input file: %s\nOutput file: %s\nLogical CPUs: %d\nMax procs: %d\nRuns: %d\nProblem size: n = %d\n",
+		inFile, outFile, cores, procs, runs, n)
+	fmt.Fprintf(fout, "Input=%s\nOutput=%s\nTimes measured in nsec\ncores=%d\nmaxProcs=%d\nruns=%d\nn=%d\narrIn=%v\n\n",
+		inFile, outFile, cores, procs, runs, n, arrIn)
 
 	// Print header
 	fmt.Fprintf(fout, "Algorithm,")
