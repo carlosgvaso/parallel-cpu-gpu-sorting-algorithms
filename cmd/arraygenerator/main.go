@@ -20,10 +20,11 @@ var maxInt int = 999
 // Usage contains the usage informations
 var usage string = `
 Usage:
-%s n [outputFile]
+%s n [-h] [outputFile]
 
 Options:
-    n           Lenght of array as int
+    -h --help   Print usage information
+    n           Length of array as int
     outputFile  Output file's path
 `
 
@@ -67,16 +68,28 @@ func main() {
 	// Check command-line arguments
 	var n int = 0
 	var err error
-	if argc == 2 {
-	} else if argc == 3 {
+	switch argc {
+	case 2: // If -h flag, print usage; else, save int to n
+		if argv[1] == "-h" || argv[1] == "--help" {
+			fmt.Printf(usage, argv[0])
+			os.Exit(exitOk)
+		} else {
+			n, err = strconv.Atoi(argv[1])
+			if err != nil {
+				fmt.Printf("Could not parse the array length, n\n")
+				fmt.Printf(usage, argv[0])
+				os.Exit(exitArg)
+			}
+		}
+	case 3: // Use 2 args for n and  outFile in this order
 		n, err = strconv.Atoi(argv[1])
 		if err != nil {
-			fmt.Printf("Could not parse the array size\n")
+			fmt.Printf("Could not parse the array length, n\n")
 			fmt.Printf(usage, argv[0])
 			os.Exit(exitArg)
 		}
 		outFile = argv[2]
-	} else {
+	default: // Wrong number of args provided
 		fmt.Printf("ERROR: Wrong number of arguments provided\n")
 		fmt.Printf(usage, argv[0])
 		os.Exit(exitArg)

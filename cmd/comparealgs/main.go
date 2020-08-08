@@ -30,9 +30,10 @@ var freeProcs int = 2
 // Usage contains the usage informations
 var usage string = `
 Usage:
-%s [inputFile outputFile procs]
+%s [-h] [inputFile outputFile procs]
 
 Options:
+    -h --help   Print usage information
     inputFile   Input file's path
     outputFile  Output file's path
     procs       Maximum number of CPUs to use in parallel
@@ -116,11 +117,18 @@ func main() {
 	var err error
 
 	// Check command-line arguments
-	if argc != 4 && argc != 1 {
-		fmt.Printf("ERROR: Wrong number of arguments provided\n")
-		fmt.Printf(usage, argv[0])
-		os.Exit(exitArg)
-	} else if argc == 4 {
+	switch argc {
+	case 1: // Using default inFile, outFile and procs; no need to do anything
+	case 2: // If -h flag, print usage
+		if argv[1] == "-h" || argv[1] == "--help" {
+			fmt.Printf(usage, argv[0])
+			os.Exit(exitOk)
+		} else {
+			fmt.Printf("ERROR: Wrong argument provided\n")
+			fmt.Printf(usage, argv[0])
+			os.Exit(exitArg)
+		}
+	case 4: // Use 3 args for inFile, outFile and procs in this order
 		inFile = argv[1]
 		outFile = argv[2]
 		procs, err = strconv.Atoi(argv[3])
@@ -129,6 +137,10 @@ func main() {
 			fmt.Printf(usage, argv[0])
 			os.Exit(exitArg)
 		}
+	default: // Wrong number of args provided
+		fmt.Printf("ERROR: Wrong number of arguments provided\n")
+		fmt.Printf(usage, argv[0])
+		os.Exit(exitArg)
 	}
 
 	// Read the input file
