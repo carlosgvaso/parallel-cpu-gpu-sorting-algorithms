@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/carlosgvaso/parallel-sort/bricksort"
 	"github.com/carlosgvaso/parallel-sort/quicksort"
 )
 
@@ -181,7 +182,7 @@ func main() {
 	for i := 0; i <= runs; i++ {
 		// Brick sort sorts in place, so pass arrOut to preserve arrIn
 		startTime := time.Now()
-		arrOut = quicksort.Sort(arrOut)
+		arrOut = bricksort.Sort(arrOut)
 		execTime := time.Since(startTime)
 
 		// Ignore the first run because it is always artificially slower
