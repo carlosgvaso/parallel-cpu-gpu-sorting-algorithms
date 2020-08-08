@@ -11,7 +11,7 @@
 #SBATCH --mail-type=all    # Send email at begin and end of job
 
 # Jobs to run
-arrLength=("1K" "10K" "100K" "1M" "10M" "100M" "1G")
+input=("./input/input_1K.txt" "./input/input_10K.txt" "./input/input_100K.txt" "./input/input_1M.txt" "./input/input_10M.txt" "./input/input_100M.txt" "./input/input_1G.txt")
 procs=(1 2 4 12 24 36 48)
 runs=100
 
@@ -23,13 +23,14 @@ echo "Module list:"
 module list
 
 echo "Installing parallel-sort go module..."
-go install ./...
+go install -i -a -v ./...
+echo ""
 
 echo "Running jobs..."
-for l in ${arrLength[@]}; do
+for i in ${input[@]}; do
 	for p in ${procs[@]}; do
-		echo "Job: Input: ./input/input_${l}.txt Output: ./output/output_${l}.txt Procs: ${p} Runs: ${runs}"
-		~/go/bin/comparealgs -input=./input/input_${l}.txt -output=./output/output_${l}.txt -procs=${p} -runs=${runs}
+		echo "Job: Input: ${i} Output: ${i//input/output} Procs: ${p} Runs: ${runs}"
+		~/go/bin/comparealgs -input=${i} -output=${i//input/output} -procs=${p} -runs=${runs}
 		sleep 5
 	done
 done

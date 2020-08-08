@@ -24,6 +24,7 @@ module list
 
 echo "Installing parallel-sort go module..."
 go install -i -a -v ./...
+echo ""
 
 echo "Running jobs..."
 for i in ${input[@]}; do
