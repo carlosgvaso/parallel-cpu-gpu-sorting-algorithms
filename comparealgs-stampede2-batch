@@ -11,9 +11,16 @@
 #SBATCH --mail-type=all    # Send email at begin and end of job
 
 # Jobs to run
-input=("./input/input_1K.txt" "./input/input_10K.txt" "./input/input_100K.txt" "./input/input_1M.txt" "./input/input_10M.txt" "./input/input_100M.txt" "./input/input_1G.txt")
-procs=(1 2 4 12 24 36 48)
-runs=100
+# Add space separated list of input files in the input array. The files must
+# have the word "input" (all lower-case) in their path (if they are inside the
+# input directory this is already satisfied). The output files will be saved to
+# files with a path where the "input" words in the path have been replaced with
+# "output". For example, the output for input file "./input/input_1K.txt" will
+# be saved to file "./output/output_1K.txt".
+input=("./input/input_1K.txt" "./input/input_10K.txt")
+format=1 # 0 for CSV, 1 for 1 array entry per line format
+procs=(1 2 4 12 24 36 48) # Max number of processors to run a test
+runs=100 # Number of runs per input per procs
 
 echo "Date: $(date)"
 echo "Working directory: $(pwd)"
@@ -30,7 +37,7 @@ echo "Running jobs..."
 for i in ${input[@]}; do
 	for p in ${procs[@]}; do
 		echo "Job: Input: ${i} Output: ${i//input/output} Procs: ${p} Runs: ${runs}"
-		~/go/bin/comparealgs -input=${i} -output=${i//input/output} -procs=${p} -runs=${runs}
+		~/go/bin/comparealgs -input=${i} -format=${format} -output=${i//input/output} -procs=${p} -runs=${runs}
 		sleep 5
 	done
 done
