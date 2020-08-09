@@ -1,11 +1,11 @@
 package mergesort
 
-
 import (
+	"reflect"
 	"testing"
 )
 
-func BenchmarkParallelMergesort3(b *testing.B) {
+func TestSort(t *testing.T) {
 	cases := []struct {
 		in, want []int
 	}{

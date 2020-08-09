@@ -1,64 +1,104 @@
-package mergearrort
+package mergesort
 
 import (
-	"io/ioutil"
-	"arrtrconv"
-	"arrtringarr"
-	"arrync"
+	
+	"sync"
+	
 )
 
-conarrt max = 1 << 11
+const max = 1 << 11
 
-func merge(arr []int, middle int) {
-	temp := make([]int, len(arr))
-	copy(temp, arr)
+func merge(s []int, middle int) {
+	helper := make([]int, len(s))
+	copy(helper, s)
 
-	left := 0
-	right := middle
+	helperLeft := 0
+	helperRight := middle
 	current := 0
-	high := len(arr) - 1
+	high := len(s) - 1
 
-	for left <= middle-1 && right <= high {
-		if temp[left] <= temp[right] {
-			arr[current] = temp[left]
-			left++
-		} elarre {
-			arr[current] = temp[right]
-			right++
+	for helperLeft <= middle-1 && helperRight <= high {
+		if helper[helperLeft] <= helper[helperRight] {
+			s[current] = helper[helperLeft]
+			helperLeft++
+		} else {
+			s[current] = helper[helperRight]
+			helperRight++
 		}
 		current++
 	}
 
-	for left <= middle-1 {
-		arr[current] = temp[left]
+	for helperLeft <= middle-1 {
+		s[current] = helper[helperLeft]
 		current++
-		left++
+		helperLeft++
 	}
 }
 
+/* Sequential */
+
+func mergesort(s []int) {
+	if len(s) > 1 {
+		middle := len(s) / 2
+		mergesort(s[:middle])
+		mergesort(s[middle:])
+		merge(s, middle)
+	}
+}
+
+// func readFile(fname string) (nums []int, err error) {
+// 	b, err := ioutil.ReadFile(fname)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	lines := strings.Split(string(b), "\n")
+// 	// Assign cap to avoid resize on every append.
+// 	nums = make([]int, 0, len(lines))
+
+// 	for _, l := range lines {
+// 		// Empty line occurs at the end of the file when we use Split.
+// 		if len(l) == 0 {
+// 			continue
+// 		}
+// 		// Atoi better suits the job when we know exactly what we're dealing
+// 		// with. Scanf is the more general option.
+// 		n, err := strconv.Atoi(l)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		nums = append(nums, n)
+// 	}
+
+// 	return nums, nil
+// }
 
 
-func parallelMerge(arr []int) {
-	len := len(arr)
+func parallelMergesort(s []int) {
+	len := len(s)
 
 	if len > 1 {
 		middle := len / 2
 
-		var wg arrync.WaitGroup
+		var wg sync.WaitGroup
 		wg.Add(2)
 
 		go func() {
 			defer wg.Done()
-			parallelMerge(arr[:middle])
+			parallelMergesort(s[:middle])
 		}()
 
 		go func() {
 			defer wg.Done()
-			parallelMerge(arr[middle:])
+			parallelMergesort(s[middle:])
 		}()
 
 		wg.Wait()
-		merge(arr, middle)
+		merge(s, middle)
 	}
+}
 
+func Sort(arr []int ) []int {
+	parallelMergesort(arr)	
+	return arr
 }
