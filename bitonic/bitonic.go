@@ -14,13 +14,13 @@ const (
 func Sort(arr []int) []int {
 
 	orderby := true
-	BitonicSort(arr, orderby)
+	bitonicSort(arr, orderby)
 	return arr
 
 }
 
-// Bitonic sor will return the sorted array based on the input array
-func BitonicSort(arr []int, orderby bool) {
+// bitonicSort  will return the sorted array based on the input array
+func bitonicSort(arr []int, orderby bool) {
 	if len(arr) < 2 {
 		return
 	}
@@ -31,12 +31,12 @@ func BitonicSort(arr []int, orderby bool) {
 
 	go func() {
 		defer wg.Done()
-		BitonicSort(arr[:middle], ASC)
+		bitonicSort(arr[:middle], ASC)
 	}()
 
 	go func() {
 		defer wg.Done()
-		BitonicSort(arr[middle:], DESC)
+		bitonicSort(arr[middle:], DESC)
 	}()
 	wg.Wait()
 	bitonicMerge(arr, orderby)
