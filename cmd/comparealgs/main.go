@@ -128,8 +128,8 @@ func readInputEntryPerLine(inFile string) ([]int, []int, int) {
 	lines := strings.Split(string(b), "\n")
 	// Assign cap to avoid resize on every append.
 	n = len(lines)
-	arrIn := make([]int, n)
-	arrOut := make([]int, n)
+	arrIn := make([]int, 0, n)
+	arrOut := make([]int, 0, n)
 
 	for _, l := range lines {
 		// Empty line occurs at the end of the file when we use Split.
