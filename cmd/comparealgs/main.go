@@ -13,8 +13,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/carlosgvaso/parallel-sort/bitonicsort"
 	"github.com/carlosgvaso/parallel-sort/bricksort"
+	"github.com/carlosgvaso/parallel-sort/mergesort"
 	"github.com/carlosgvaso/parallel-sort/quicksort"
+	//"github.com/carlosgvaso/parallel-sort/radixsort"
 )
 
 // OutFile is the output file's path.
@@ -22,6 +25,11 @@ var outFile string = "output.txt"
 
 // InFile is the input file's path.
 var inFile string = "input.txt"
+
+// InFileFormat is the input file's format.
+//
+// Formats are: 0 for CSV, 1 for array entry per line
+var inFileFormat int = 0
 
 // Runs is the number of times each algorithm is run to average execution time.
 var runs int = 1000
@@ -54,14 +62,14 @@ func loadArrays(val string, arrIn []int, arrOut []int, i int,
 	arrOut[i] = arrIn[i]
 }
 
-// ReadInput reads the input file.
+// ReadInputCsv reads the input file.
 //
 // It assumes the file is in CSV format with a single line of input integers.
 //
 // It returns arrays arrIn and arrOutwith the comma-separated entries in the
 // first line of the file converted to integers, and integer n with the length
 // of the arrays.
-func readInput(inFile string) ([]int, []int, int) {
+func readInputCsv(inFile string) ([]int, []int, int) {
 	// Open the file
 	csvfile, err := os.Open(inFile)
 	if err != nil {
@@ -99,31 +107,55 @@ func readInput(inFile string) ([]int, []int, int) {
 	return arrIn, arrOut, n
 }
 
+// ReadInputEntryPerLine reads the input file.
+//
+// It assumes the file is in a format with a single array integer entry per line
+// of the file.
+//
+// It returns arrays arrIn and arrOutwith the comma-separated entries in the
+// first line of the file converted to integers, and integer n with the length
+// of the arrays.
+func readInputEntryPerLine(inFile string) ([]int, []int, int) {
+	var arr []int
+	var n int
+	fmt.Printf("Cannot read this format yet for file %s\n", inFile)
+	return arr, arr, n
+}
+
 // Main reads the array in the input file, and records the execution times each
 // sorting algorithm takes to sort it.
 //
 // It saves the results to the specified file, or the default filename.
 func main() {
-	//argv := os.Args
-	//argc := len(argv)
+	var arrIn, arrOut []int
+	var n int
 	var procs int = 0
 	var err error
 	cores := runtime.NumCPU()
 
 	// Check command-line arguments
 	inFilePtr := flag.String("input", inFile, "Input file's path")
+	inFileFormatPtr := flag.Int("format", inFileFormat, "Input file's format")
 	outFilePtr := flag.String("output", outFile, "Output file's path")
 	procsPtr := flag.Int("procs", (cores - freeProcs), "Maximum number of CPUs to use in parallel")
 	runsPtr := flag.Int("runs", runs, "Number of times each algorithm is run to average execution time")
 	flag.Parse()
 
 	inFile = *inFilePtr
+	inFileFormat = *inFileFormatPtr
 	outFile = *outFilePtr
 	procs = *procsPtr
 	runs = *runsPtr
 
 	// Read the input file
-	arrIn, arrOut, n := readInput(inFile)
+	switch inFileFormat {
+	case 0:
+		arrIn, arrOut, n = readInputCsv(inFile)
+	case 1:
+		arrIn, arrOut, n = readInputEntryPerLine(inFile)
+	default:
+		log.Fatalln("Unknown input file format")
+	}
 
 	// Open output file
 	fout, err := os.Create(outFile)
@@ -145,9 +177,9 @@ func main() {
 	}
 	fmt.Fprintf(fout, "ExecTimeAvg\n")
 
-	// Run brick sort
-	fmt.Printf("\tBrick Sort:\n")
-	fmt.Fprintf(fout, "bricksort,")
+	// Run bitonic sort
+	fmt.Printf("\tBitonic Sort:\n")
+	fmt.Fprintf(fout, "bitonicsort,")
 
 	// Setup variables to calculate the execution time averages
 	var execTimeAvg int = 0
@@ -156,7 +188,77 @@ func main() {
 	for i := 0; i <= runs; i++ {
 		// Brick sort sorts in place, so pass arrOut to preserve arrIn
 		startTime := time.Now()
+		arrOut = bitonicsort.Sort(arrOut)
+		execTime := time.Since(startTime)
+
+		// Ignore the first run because it is always artificially slower
+		if i > 0 {
+			fmt.Printf("\t\tExec time %d: %s\n", i, execTime)
+			fmt.Fprintf(fout, "%d,", int(execTime))
+
+			// Add all times to average them
+			execTimeAvg += int(execTime)
+		}
+
+		// Copy arrIn to arrOut for the next iteration
+		copy(arrOut, arrIn)
+
+		// Sleep between runs to let the CPUs cool down
+		time.Sleep(sleepTime * time.Second)
+	}
+
+	// Calculate average
+	execTimeAvg = execTimeAvg / runs
+	fmt.Printf("\t\tExec time avg: %dns\n", execTimeAvg)
+	fmt.Fprintf(fout, "%d\n", execTimeAvg)
+
+	// Run brick sort
+	fmt.Printf("\tBrick Sort:\n")
+	fmt.Fprintf(fout, "bricksort,")
+
+	// Setup variables to calculate the execution time averages
+	execTimeAvg = 0
+
+	// Run benchmarks
+	for i := 0; i <= runs; i++ {
+		// Brick sort sorts in place, so pass arrOut to preserve arrIn
+		startTime := time.Now()
 		arrOut = bricksort.Sort(arrOut)
+		execTime := time.Since(startTime)
+
+		// Ignore the first run because it is always artificially slower
+		if i > 0 {
+			fmt.Printf("\t\tExec time %d: %s\n", i, execTime)
+			fmt.Fprintf(fout, "%d,", int(execTime))
+
+			// Add all times to average them
+			execTimeAvg += int(execTime)
+		}
+
+		// Copy arrIn to arrOut for the next iteration
+		copy(arrOut, arrIn)
+
+		// Sleep between runs to let the CPUs cool down
+		time.Sleep(sleepTime * time.Second)
+	}
+
+	// Calculate average
+	execTimeAvg = execTimeAvg / runs
+	fmt.Printf("\t\tExec time avg: %dns\n", execTimeAvg)
+	fmt.Fprintf(fout, "%d\n", execTimeAvg)
+
+	// Run mergesort
+	fmt.Printf("\tMergesort:\n")
+	fmt.Fprintf(fout, "mergesort,")
+
+	// Setup variables to calculate the execution time averages
+	execTimeAvg = 0
+
+	// Run benchmarks
+	for i := 0; i <= runs; i++ {
+		// Brick sort sorts in place, so pass arrOut to preserve arrIn
+		startTime := time.Now()
+		arrOut = mergesort.Sort(arrOut)
 		execTime := time.Since(startTime)
 
 		// Ignore the first run because it is always artificially slower
@@ -192,6 +294,42 @@ func main() {
 		// Quicksort sorts in place, so pass arrOut to preserve arrIn
 		startTime := time.Now()
 		arrOut = quicksort.Sort(arrOut)
+		execTime := time.Since(startTime)
+
+		// Ignore the first run because it is always artificially slower
+		if i > 0 {
+			fmt.Printf("\t\tExec time %d: %s\n", i, execTime)
+			fmt.Fprintf(fout, "%d,", int(execTime))
+
+			// Add all times to average them
+			execTimeAvg += int(execTime)
+		}
+
+		// Copy arrIn to arrOut for the next iteration
+		copy(arrOut, arrIn)
+
+		// Sleep between runs to let the CPUs cool down
+		time.Sleep(sleepTime * time.Second)
+	}
+
+	// Calculate average
+	execTimeAvg = execTimeAvg / runs
+	fmt.Printf("\t\tExec time avg: %dns\n", execTimeAvg)
+	fmt.Fprintf(fout, "%d\n", execTimeAvg)
+
+	// Run radix sort
+	fmt.Printf("\tRadix Sort:\n")
+	fmt.Fprintf(fout, "radixsort,")
+
+	// Setup variables to calculate the execution time averages
+	execTimeAvg = 0
+
+	// Run benchmarks
+	for i := 0; i <= runs; i++ {
+		// Brick sort sorts in place, so pass arrOut to preserve arrIn
+		startTime := time.Now()
+		// TODO: Fix this
+		//arrOut = radixsort.Sort(arrOut)
 		execTime := time.Since(startTime)
 
 		// Ignore the first run because it is always artificially slower

@@ -1,11 +1,11 @@
-package bitonic
-
+package bitonicsort
 
 import (
+	"reflect"
 	"testing"
 )
 
-func BenchmarkTestParallelBitonicSort(b *testing.B) {
+func TestSort(t *testing.T) {
 	cases := []struct {
 		in, want []int
 	}{

@@ -1,4 +1,4 @@
-package main
+package bitonicsort
 
 import (
 	"math/rand"
@@ -15,10 +15,13 @@ func init() {
 	rand.Seed(time.Now().UTC().UnixNano())
 }
 
-func bitonic_sort_go(arr []int, orderby bool) {
-
-	bitonic_sort(arr, orderby)
-
+// Sort sorts an array in place using the parallel bitonic algorithm.
+//
+// It takes an array as an input.
+// It returns the input array sorted.
+func Sort(arr []int) []int {
+	bitonic_sort(arr, ASC)
+	return arr
 }
 
 func bitonic_sort(arr []int, orderby bool) {
