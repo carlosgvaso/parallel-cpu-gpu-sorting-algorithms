@@ -6,10 +6,12 @@ import (
 	"encoding/csv"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"runtime"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -66,7 +68,7 @@ func loadArrays(val string, arrIn []int, arrOut []int, i int,
 //
 // It assumes the file is in CSV format with a single line of input integers.
 //
-// It returns arrays arrIn and arrOutwith the comma-separated entries in the
+// It returns arrays arrIn and arrOut with the comma-separated entries in the
 // first line of the file converted to integers, and integer n with the length
 // of the arrays.
 func readInputCsv(inFile string) ([]int, []int, int) {
@@ -112,14 +114,41 @@ func readInputCsv(inFile string) ([]int, []int, int) {
 // It assumes the file is in a format with a single array integer entry per line
 // of the file.
 //
-// It returns arrays arrIn and arrOutwith the comma-separated entries in the
+// It returns arrays arrIn and arrOut with the comma-separated entries in the
 // first line of the file converted to integers, and integer n with the length
 // of the arrays.
 func readInputEntryPerLine(inFile string) ([]int, []int, int) {
-	var arr []int
-	var n int
-	fmt.Printf("Cannot read this format yet for file %s\n", inFile)
-	return arr, arr, n
+	var n int = 0
+
+	b, err := ioutil.ReadFile(inFile)
+	if err != nil {
+		log.Fatalln("Could not read the input file", err)
+	}
+
+	lines := strings.Split(string(b), "\n")
+	// Assign cap to avoid resize on every append.
+	n = len(lines)
+	arrIn := make([]int, n)
+	arrOut := make([]int, n)
+
+	for _, l := range lines {
+		// Empty line occurs at the end of the file when we use Split.
+		if len(l) == 0 {
+			continue
+		}
+		// Atoi better suits the job when we know exactly what we're dealing
+		// with
+		num, err := strconv.Atoi(l)
+		if err != nil {
+			log.Fatalln("Could not parse the input array", err)
+		}
+		arrIn = append(arrIn, num)
+		arrOut = append(arrOut, num)
+	}
+
+	n = len(arrIn)
+
+	return arrIn, arrOut, n
 }
 
 // Main reads the array in the input file, and records the execution times each
