@@ -26,14 +26,15 @@ func Sort(arr []int) []int {
 // Quicksort is a regular quicksort implementation with random pivot and
 // parallelized by goroutines at each recursive call
 func quicksort(arr []int, p int, r int, wg *sync.WaitGroup) {
+	defer wg.Done()
+
 	if p < r {
 		q := partition(arr, p, r)
+
 		wg.Add(2)
 		go quicksort(arr, p, q-1, wg)
 		go quicksort(arr, q+1, r, wg)
 	}
-
-	defer wg.Done()
 }
 
 // Partition splits the input array using a randomized choice of a pivot.
@@ -45,17 +46,22 @@ func partition(arr []int, p int, r int) int {
 	x := arr[r]
 	j := p - 1
 	i := p
+
 	for i < r {
 		if arr[i] <= x {
 			j++
+
 			tmp := arr[j]
 			arr[j] = arr[i]
 			arr[i] = tmp
 		}
+
 		i++
 	}
+
 	temp := arr[j+1]
 	arr[j+1] = arr[r]
 	arr[r] = temp
+
 	return j + 1
 }
