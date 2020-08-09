@@ -1,3 +1,4 @@
+// Test parallel bitonic sort implementation
 package bitonicsort
 
 import (
@@ -5,6 +6,7 @@ import (
 	"testing"
 )
 
+// TestSort checks Sort with a multitude of input arrays.
 func TestSort(t *testing.T) {
 	cases := []struct {
 		in, want []int
