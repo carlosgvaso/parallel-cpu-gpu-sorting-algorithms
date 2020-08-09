@@ -1,9 +1,7 @@
-package main
+package bitonic
 
 import (
-	"math/rand"
 	"sync"
-	"time"
 )
 
 const (
@@ -11,13 +9,10 @@ const (
 	DESC bool = false
 )
 
-func init() {
-	rand.Seed(time.Now().UTC().UnixNano())
-}
-
-func bitonic_sort_go(arr []int, orderby bool) {
+func Sort(arr []int, orderby bool) []int {
 
 	bitonic_sort(arr, orderby)
+	return arr
 
 }
 

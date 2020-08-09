@@ -1,11 +1,11 @@
 package bitonic
 
-
 import (
+	"reflect"
 	"testing"
 )
 
-func BenchmarkTestParallelBitonicSort(b *testing.B) {
+func TestSort(t *testing.T) {
 	cases := []struct {
 		in, want []int
 	}{
@@ -16,7 +16,7 @@ func BenchmarkTestParallelBitonicSort(b *testing.B) {
 	}
 
 	for _, c := range cases {
-		got := Sort(c.in)
+		got := Sort(c.in, true)
 		want := c.want
 
 		if !reflect.DeepEqual(got, want) {
