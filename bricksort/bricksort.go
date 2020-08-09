@@ -1,5 +1,5 @@
 // Package bricksort provides a parallel brick sort implementation to sort
-// arrays.
+// integer arrays.
 package bricksort
 
 import (

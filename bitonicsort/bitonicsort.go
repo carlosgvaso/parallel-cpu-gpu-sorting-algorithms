@@ -1,8 +1,8 @@
-// Package bitonic provides a parallel bitonic sort implementation to sort
-// arrays.
-package bitonic
+package bitonicsort
 
-import "sync"
+import (
+	"sync"
+)
 
 //Adding boolean for Ascending and descending order
 const (
@@ -16,7 +16,6 @@ func Sort(arr []int) []int {
 	orderby := true
 	bitonicSort(arr, orderby)
 	return arr
-
 }
 
 // bitonicSort  will return the sorted array based on the input array

@@ -1,5 +1,5 @@
-// Package quicksort provides a parallel brick sort implementation to sort
-// arrays.
+// Package quicksort provides a parallel quick sort implementation to sort
+// integer arrays.
 package quicksort
 
 import (

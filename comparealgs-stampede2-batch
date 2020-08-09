@@ -4,18 +4,42 @@
 #SBATCH -e comparealgs_%j.txt # Name of stderr error file
 #SBATCH -p normal          # Queue (partition) name
 #SBATCH -N 1               # Total # of nodes
-#SBATCH -n 1               # Total # of mpi tasks
+#SBATCH -n 50              # Total # of mpi tasks
 #SBATCH -t 00:30:00        # Run time (hh:mm:ss)
 #SBATCH -A EE-382C-EE-361C-Mult # Allocation name
 #SBATCH --mail-user=user@email.com # Replace by your email
 #SBATCH --mail-type=all    # Send email at begin and end of job
 
-# Job to run
+# Jobs to run
+# Add space separated list of input files in the input array. The files must
+# have the word "input" (all lower-case) in their path (if they are inside the
+# input directory this is already satisfied). The output files will be saved to
+# files with a path where the "input" words in the path have been replaced with
+# "output". For example, the output for input file "./input/input_1K.txt" will
+# be saved to file "./output/output_1K.txt".
+input=("./input/input_1K.txt" "./input/input_10K.txt")
+format=1 # 0 for CSV, 1 for 1 array entry per line format
+procs=(1 2 4 12 24 36 48) # Max number of processors to run a test
+runs=100 # Number of runs per input per procs
+
 echo "Date: $(date)"
 echo "Working directory: $(pwd)"
 echo "System: stampede2, knl, 1node, 1procpernode, 68coresperproc, 4thspercore, 272threads"
+
 echo "Module list:"
 module list
-echo "Running job..."
-~/go/bin/comparealgs input_1K.txt output_1K.txt
+
+echo "Installing parallel-sort go module..."
+go install -i -a -v ./...
+echo ""
+
+echo "Running jobs..."
+for i in ${input[@]}; do
+	for p in ${procs[@]}; do
+		echo "Job: Input: ${i} Output: ${i//input/output} Procs: ${p} Runs: ${runs}"
+		~/go/bin/comparealgs -input=${i} -format=${format} -output=${i//input/output} -procs=${p} -runs=${runs}
+		sleep 5
+	done
+done
+
 echo "Done"
