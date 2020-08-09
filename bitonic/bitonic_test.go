@@ -16,7 +16,7 @@ func TestSort(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		got := Sort(c.in, true)
+		got := Sort(c.in)
 		want := c.want
 
 		if !reflect.DeepEqual(got, want) {

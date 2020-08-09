@@ -4,19 +4,23 @@ import (
 	"sync"
 )
 
+//Adding boolean for Ascending and descending order
 const (
 	ASC  bool = true
 	DESC bool = false
 )
 
-func Sort(arr []int, orderby bool) []int {
+// Sort sorts an array in place using the parallel bitonic sort algorithm.
+func Sort(arr []int) []int {
 
-	bitonic_sort(arr, orderby)
+	orderby := true
+	BitonicSort(arr, orderby)
 	return arr
 
 }
 
-func bitonic_sort(arr []int, orderby bool) {
+// Bitonic sor will return the sorted array based on the input array
+func BitonicSort(arr []int, orderby bool) {
 	if len(arr) < 2 {
 		return
 	}
@@ -27,18 +31,18 @@ func bitonic_sort(arr []int, orderby bool) {
 
 	go func() {
 		defer wg.Done()
-		bitonic_sort(arr[:middle], ASC)
+		BitonicSort(arr[:middle], ASC)
 	}()
 
 	go func() {
 		defer wg.Done()
-		bitonic_sort(arr[middle:], DESC)
+		BitonicSort(arr[middle:], DESC)
 	}()
 	wg.Wait()
-	bitonic_merge(arr, orderby)
+	bitonicMerge(arr, orderby)
 }
 
-func bitonic_compare(arr []int, orderby bool) {
+func bitonicCompare(arr []int, orderby bool) {
 	middle := len(arr) / 2
 	for i := 0; i < middle; i++ {
 		if (arr[i] > arr[i+middle]) == orderby {
@@ -47,19 +51,19 @@ func bitonic_compare(arr []int, orderby bool) {
 	}
 }
 
-func bitonic_merge(arr []int, orderby bool) {
-	bitonic_compare(arr, orderby)
+func bitonicMerge(arr []int, orderby bool) {
+	bitonicCompare(arr, orderby)
 	middle := len(arr) / 2
 	if middle > 1 {
 		var wg sync.WaitGroup
 		wg.Add(2)
 		go func() {
 			defer wg.Done()
-			bitonic_merge(arr[:middle], orderby)
+			bitonicMerge(arr[:middle], orderby)
 		}()
 		go func() {
 			defer wg.Done()
-			bitonic_merge(arr[middle:], orderby)
+			bitonicMerge(arr[middle:], orderby)
 		}()
 		wg.Wait()
 
