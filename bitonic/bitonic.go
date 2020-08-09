@@ -1,8 +1,8 @@
+// Package bitonic provides a parallel bitonic sort implementation to sort
+// arrays.
 package bitonic
 
-import (
-	"sync"
-)
+import "sync"
 
 //Adding boolean for Ascending and descending order
 const (
