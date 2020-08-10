@@ -18,7 +18,10 @@ func TestSort(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		got := Sort(c.in)
+		arrIn := make([]int, len(c.in))
+		copy(arrIn, c.in)
+
+		got := Sort(arrIn)
 		want := c.want
 
 		if !reflect.DeepEqual(got, want) {
