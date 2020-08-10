@@ -19,8 +19,13 @@ func TestSort(t *testing.T) {
 
 	for _, c := range cases {
 		var diff int
-		c.in, diff = CheckAndAppendZeros(c.in)
-		got := Sort(c.in, diff)
+		arrIn := make([]int, len(c.in))
+
+		// Copy and zero-pad (to make power of 2) input array to arrIn
+		copy(arrIn, c.in)
+		arrIn, diff = CheckAndAppendZeros(arrIn)
+
+		got := Sort(arrIn, diff)
 		want := c.want
 
 		if !reflect.DeepEqual(got, want) {

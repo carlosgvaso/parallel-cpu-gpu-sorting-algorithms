@@ -19,7 +19,7 @@ import (
 	"github.com/carlosgvaso/parallel-sort/bricksort"
 	"github.com/carlosgvaso/parallel-sort/mergesort"
 	"github.com/carlosgvaso/parallel-sort/quicksort"
-	//"github.com/carlosgvaso/parallel-sort/radixsort"
+	"github.com/carlosgvaso/parallel-sort/radixsort"
 )
 
 // OutFile is the output file's path.
@@ -151,6 +151,31 @@ func readInputEntryPerLine(inFile string) ([]int, []int, int) {
 	return arrIn, arrOut, n
 }
 
+// MaxNumDigits gets number of digits of largest integer in array of positive
+// integers.
+//
+// arr is the input array of positive integers.
+// It return the number of digits of the largest integer in array
+func maxNumDigits(arr []int) int {
+	var k int = 0
+	var max int = 0
+
+	// Find the largest integer in array
+	for _, v := range arr {
+		if v > max {
+			max = v
+		}
+	}
+
+	// Find the number of characters of the largest integer
+	for max != 0 {
+		max /= 10
+		k++
+	}
+
+	return k
+}
+
 // Main reads the array in the input file, and records the execution times each
 // sorting algorithm takes to sort it.
 //
@@ -186,6 +211,9 @@ func main() {
 		log.Fatalln("Unknown input file format")
 	}
 
+	// Get number of digits of largest integer in the input array for radix sort
+	k := maxNumDigits(arrIn)
+
 	// Open output file
 	fout, err := os.Create(outFile)
 	if err != nil {
@@ -215,10 +243,11 @@ func main() {
 
 	// Run benchmarks
 	for i := 0; i <= runs; i++ {
-		// append 0's to array to make its length exponential of 2
+		// Append 0's to array to make its length exponential of 2
 		var diff int
 		arrOut, diff = bitonicsort.CheckAndAppendZeros(arrOut)
-		// Brick sort sorts in place, so pass arrOut to preserve arrIn
+
+		// Bitonic sort sorts in place, so pass arrOut to preserve arrIn
 		startTime := time.Now()
 		arrOut = bitonicsort.Sort(arrOut, diff)
 		execTime := time.Since(startTime)
@@ -288,7 +317,7 @@ func main() {
 
 	// Run benchmarks
 	for i := 0; i <= runs; i++ {
-		// Brick sort sorts in place, so pass arrOut to preserve arrIn
+		// Mergesort sorts in place, so pass arrOut to preserve arrIn
 		startTime := time.Now()
 		arrOut = mergesort.Sort(arrOut)
 		execTime := time.Since(startTime)
@@ -358,10 +387,9 @@ func main() {
 
 	// Run benchmarks
 	for i := 0; i <= runs; i++ {
-		// Brick sort sorts in place, so pass arrOut to preserve arrIn
+		// Radix sort overwrites the input array, so pass arrOut to preserve arrIn
 		startTime := time.Now()
-		// TODO: Fix this
-		//arrOut = radixsort.Sort(arrOut)
+		arrOut = radixsort.Sort(arrOut, k)
 		execTime := time.Since(startTime)
 
 		// Ignore the first run because it is always artificially slower

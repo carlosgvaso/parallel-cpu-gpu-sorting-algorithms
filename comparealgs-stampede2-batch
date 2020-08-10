@@ -38,7 +38,6 @@ for i in ${input[@]}; do
 	for p in ${procs[@]}; do
 		echo "Job: Input: ${i} Output: ${i//input/output} Procs: ${p} Runs: ${runs}"
 		~/go/bin/comparealgs -input=${i} -format=${format} -output=${i//input/output} -procs=${p} -runs=${runs}
-		sleep 5
 	done
 done
 
