@@ -34,7 +34,7 @@ func Sort(arr []int) []int {
 }
 
 // Radixsort is a most significant digit radixsort implementation with
-// parallelized by goroutines at each recursive call.
+// parallelized by goroutines to fill the buckets and at each recursive call.
 //
 // It is based in the algorithm presented in Alg. 2 of PARADIS: A PARALLEL
 // IN-PLACE RADIX SORT ALGORITHM by Rolland He: PARADIS:
@@ -57,16 +57,26 @@ func radixsort(arr []int, l int, k int, wg *sync.WaitGroup) []int {
 
 	// Buckets is an array of slices
 	var buckets [numBuckets][]int
+	var bucketLocks [numBuckets]sync.Mutex
 
-	// Place the elements in the buckets
+	// Place the elements in the buckets concurrently
+	var wgBuckets sync.WaitGroup
 	for _, v := range arr {
-		// Get the lth most significant digit, d, of the element. Elements with
-		// less digits than the largest element are zero-padded.
-		d := int((v / int(math.Pow10((k-1)/l))) % 10)
+		wgBuckets.Add(1)
+		go func(v int) {
+			defer wgBuckets.Done()
 
-		// Place element in bucket buckets[d]
-		buckets[d] = append(buckets[d], v)
+			// Get the lth most significant digit, d, of the element. Elements with
+			// less digits than the largest element are zero-padded.
+			d := int((v / int(math.Pow10((k-1)/l))) % 10)
+
+			// Place element in bucket buckets[d]
+			bucketLocks[d].Lock()
+			buckets[d] = append(buckets[d], v)
+			bucketLocks[d].Unlock()
+		}(v)
 	}
+	wgBuckets.Wait()
 
 	if l <= k {
 		for i, bucket := range buckets {
