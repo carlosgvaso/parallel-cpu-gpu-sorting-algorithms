@@ -215,9 +215,12 @@ func main() {
 
 	// Run benchmarks
 	for i := 0; i <= runs; i++ {
+		// append 0's to array to make its length exponential of 2
+		var diff int
+		arrOut, diff = bitonicsort.CheckAndAppendZeros(arrOut)
 		// Brick sort sorts in place, so pass arrOut to preserve arrIn
 		startTime := time.Now()
-		arrOut = bitonicsort.Sort(arrOut)
+		arrOut = bitonicsort.Sort(arrOut, diff)
 		execTime := time.Since(startTime)
 
 		// Ignore the first run because it is always artificially slower

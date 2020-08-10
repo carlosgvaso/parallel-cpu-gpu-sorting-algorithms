@@ -11,11 +11,25 @@ const (
 )
 
 // Sort sorts an array in place using the parallel bitonic sort algorithm.
-func Sort(arr []int) []int {
-
+func Sort(arr []int, diff int) []int {
 	orderby := true
 	bitonicSort(arr, orderby)
+	arr = arr[diff:]
 	return arr
+}
+
+// CheckAndAppendZeros updates the array by making its length exponential of 2 by appending 0's
+// returns the array and difference of updated and acutal size
+func CheckAndAppendZeros(arr []int) ([]int, int) {
+	i := 2
+	size := len(arr)
+	for size > i {
+		i *= 2
+	}
+	i = i - size
+	var a = make([]int, i)
+	arr = append(arr, a...)
+	return arr, i
 }
 
 // bitonicSort  will return the sorted array based on the input array
