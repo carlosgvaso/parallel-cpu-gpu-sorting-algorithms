@@ -12,24 +12,29 @@ import (
 // Since we are sorting positive integers (e.i decimal numbers), it is 10.
 const numBuckets int = 10
 
-// Sort sorts an array in ascending order using the parallel most significant
-// digit radix sort algorithm.
+// Sort sorts an array of positive integers in ascending order using the
+// parallel most significant digit radix sort algorithm.
 //
-// This function assumes the maximum integer in the array to sort has 3 digits.
-// Therefore, it can only sort arrays with integer entries in the range
-// [0, 999].
-//
-// arr is the input array to sort.
+// arr is the positive integer input array to sort.
+// k is the number of digits of the largest integer in the input array.
 // It returns the input array sorted in ascending order.
-func Sort(arr []int) []int {
+func Sort(arr []int, k int) []int {
 	var wg sync.WaitGroup // Wait group to synchronize parallel goroutines
-	var k int = 3         // Max number of digits in any array element (assumes max array entry is 999)
+	//var k int = 3         // Max number of digits in any array element (assumes max array entry is 999)
+	/* I ended up not needing channels, but I'm keeping this just in case.
+	// Channel needed to call radixsort()
+	var returnChan chan []int
+	*/
 
 	// Run quicksort
 	wg.Add(1)
-	radixsort(arr, 1, k, &wg)
+	arr = radixsort(arr, 1, k, &wg) // , returnChan
 	wg.Wait()
 
+	/* I ended up not needing channels, but I'm keeping this just in case.
+	// Receive the sorted array through the channel
+	arr <- returnChan
+	*/
 	return arr
 }
 
@@ -47,20 +52,45 @@ func Sort(arr []int) []int {
 // k is the maximum number of digits in the array.
 // wg is a sync.WaitGroup for synchronization of the goroutines.
 // It returns the array sorted in ascending order.
-func radixsort(arr []int, l int, k int, wg *sync.WaitGroup) []int {
+func radixsort(arr []int, l int, k int, wg *sync.WaitGroup) []int { //, ch chan []int
 	defer wg.Done()
 
 	// Check if we got just one element in the bucket
 	if len(arr) == 1 {
+		/* I ended up not needing channels, but I'm keeping this just in case.
+		// Send the sorted array through the channel
+		ch <- arr
+		*/
 		return arr
 	}
 
-	// Buckets is an array of slices
+	// Wait group to syncronize concurrent bucket operations using goroutines
+	var wgBuckets sync.WaitGroup
+
+	// Buckets is an array of slices. This data structure will be written
+	// concurrently, so we need mutexes to make sure 2 or more goroutines don't
+	// write to it at the same time. Since go allows to write concurrently to
+	// different array entries, we create a mutex for each bucket.
 	var buckets [numBuckets][]int
 	var bucketLocks [numBuckets]sync.Mutex
 
+	/* I ended up not needing channels, but I'm keeping this just in case.
+	// Similarly, we create a channel for each bucket, so we can retrieve the
+	// values of the recursive calls, which are called concurrently as
+	// goroutines.
+	var bucketChans [numBuckets]chan []int
+	for i := range bucketChans {
+		wgBuckets.Add(1)
+		go func(i int) {
+			defer wgBuckets.Done()
+
+			bucketChans[i] = make(chan []int)
+		}(i)
+	}
+	wgBuckets.Wait()
+	*/
+
 	// Place the elements in the buckets concurrently
-	var wgBuckets sync.WaitGroup
 	for _, v := range arr {
 		wgBuckets.Add(1)
 		go func(v int) {
@@ -79,10 +109,49 @@ func radixsort(arr []int, l int, k int, wg *sync.WaitGroup) []int {
 	wgBuckets.Wait()
 
 	if l <= k {
-		for i, bucket := range buckets {
-			wg.Add(1)
-			buckets[i] = radixsort(bucket, l+1, k, wg)
+		// Concurrent recursive call
+		for _, bucket := range buckets {
+			// Only recurse if bucket is not empty
+			if len(bucket) > 0 {
+				wgBuckets.Add(1)
+				// The bucket that we are passing is nothing but a slice that
+				// the radixsort recursive call will sort. Since radixsort()
+				// saves the sorted array back to the input array passed to it,
+				// there is no need to return/get the sorted array, because it
+				// will already be saved in the bucket.
+				go radixsort(bucket, l+1, k, &wgBuckets) //, bucketChans[i]
+			}
 		}
+		wgBuckets.Wait()
+
+		/* I ended up not needing channels, but I'm keeping this just in case.
+		// Get results. This assumes numBuckets = 10 (radix of 10).
+		// Use channels to return data from radixsort()
+		for i := 0; i < numBuckets; i++ {
+			select {
+			case arrTmp := <-bucketChans[0]:
+				buckets[0] = arrTmp
+			case arrTmp := <-bucketChans[1]:
+				buckets[1] = arrTmp
+			case arrTmp := <-bucketChans[2]:
+				buckets[2] = arrTmp
+			case arrTmp := <-bucketChans[3]:
+				buckets[3] = arrTmp
+			case arrTmp := <-bucketChans[4]:
+				buckets[4] = arrTmp
+			case arrTmp := <-bucketChans[5]:
+				buckets[5] = arrTmp
+			case arrTmp := <-bucketChans[6]:
+				buckets[6] = arrTmp
+			case arrTmp := <-bucketChans[7]:
+				buckets[7] = arrTmp
+			case arrTmp := <-bucketChans[8]:
+				buckets[8] = arrTmp
+			case arrTmp := <-bucketChans[9]:
+				buckets[9] = arrTmp
+			}
+		}
+		*/
 	}
 
 	// Replace arr elements with elements from buckets in the same order
@@ -97,5 +166,9 @@ func radixsort(arr []int, l int, k int, wg *sync.WaitGroup) []int {
 		}
 	}
 
+	/* I ended up not needing channels, but I'm keeping this just in case.
+	// Send the sorted array through the channel
+	ch <- arr
+	*/
 	return arr
 }
