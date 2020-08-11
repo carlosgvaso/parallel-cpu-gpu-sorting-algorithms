@@ -36,8 +36,10 @@ echo ""
 echo "Running jobs..."
 for i in ${input[@]}; do
 	for p in ${procs[@]}; do
-		echo "Job: Input: ${i} Output: ${i//input/output} Procs: ${p} Runs: ${runs}"
-		~/go/bin/comparealgs -input=${i} -format=${format} -output=${i//input/output} -procs=${p} -runs=${runs}
+		output=${i//input/output}         # Replace `input` with `output`
+		output=${output//.txt/_p${p}.txt} # Replace `.txt` with `_p#.txt`
+		echo "Job: Input: ${i} Output: ${output} Procs: ${p} Runs: ${runs}"
+		~/go/bin/comparealgs -input=${i} -format=${format} -output=${output} -procs=${p} -runs=${runs}
 	done
 done
 
