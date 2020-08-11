@@ -1,9 +1,7 @@
 package mergesort
 
 import (
-	
 	"sync"
-	
 )
 
 const max = 1 << 11
@@ -73,32 +71,35 @@ func mergesort(s []int) {
 // 	return nums, nil
 // }
 
-
 func parallelMergesort(s []int) {
 	len := len(s)
 
 	if len > 1 {
-		middle := len / 2
+		if len <= max {
+			mergesort(s)
+		} else {
+			middle := len / 2
 
-		var wg sync.WaitGroup
-		wg.Add(2)
+			var wg sync.WaitGroup
+			wg.Add(2)
 
-		go func() {
-			defer wg.Done()
-			parallelMergesort(s[:middle])
-		}()
+			go func() {
+				defer wg.Done()
+				parallelMergesort(s[:middle])
+			}()
 
-		go func() {
-			defer wg.Done()
-			parallelMergesort(s[middle:])
-		}()
+			go func() {
+				defer wg.Done()
+				parallelMergesort(s[middle:])
+			}()
 
-		wg.Wait()
-		merge(s, middle)
+			wg.Wait()
+			merge(s, middle)
+		}
 	}
 }
 
-func Sort(arr []int ) []int {
-	parallelMergesort(arr)	
+func Sort(arr []int) []int {
+	parallelMergesort(arr)
 	return arr
 }
