@@ -47,6 +47,34 @@ var exitOk int = 0  // Exit without errors
 var exitArg int = 1 // Exit bad arguments
 var exitErr int = 2 // Exit unknown error
 
+// ArrayFlags defines the type for flags that are an array of entries.
+//
+// The input of these flags is in the following format:
+// $ comparealgs -list1 value1 -list1 value2
+type arrayFlags []string
+
+// String returns the string representation of the arrayFlags type.
+func (i *arrayFlags) String() string {
+	var iStr string
+
+	for j, entry := range *i {
+		if j == 0 {
+			iStr += "[ " + entry
+		} else {
+			iStr += ", " + entry
+		}
+	}
+	iStr += " ]"
+
+	return iStr
+}
+
+// Set sets the value of the arrayFlag type.
+func (i *arrayFlags) Set(value string) error {
+	*i = append(*i, value)
+	return nil
+}
+
 // LoadArrays loads the arrIn and arrOut arrays in parallel with the provided
 // value val converted to an int.
 func loadArrays(val string, arrIn []int, arrOut []int, i int,
@@ -186,6 +214,7 @@ func main() {
 	var procs int = 0
 	var err error
 	cores := runtime.NumCPU()
+	var algs arrayFlags
 
 	// Check command-line arguments
 	inFilePtr := flag.String("input", inFile, "Input file's path")
@@ -193,6 +222,7 @@ func main() {
 	outFilePtr := flag.String("output", outFile, "Output file's path")
 	procsPtr := flag.Int("procs", (cores - freeProcs), "Maximum number of CPUs to use in parallel")
 	runsPtr := flag.Int("runs", runs, "Number of times each algorithm is run to average execution time")
+	flag.Var(&algs, "alg", "Specify algorithms to run. This flag should be called multiple times for each algorithm to run. Available algorithms are: bitonicsort, bricksort, mergesort, quicksort and radixsort")
 	flag.Parse()
 
 	inFile = *inFilePtr
@@ -200,6 +230,14 @@ func main() {
 	outFile = *outFilePtr
 	procs = *procsPtr
 	runs = *runsPtr
+
+	if algs == nil {
+		algs.Set("bitonicsort")
+		algs.Set("bricksort")
+		algs.Set("mergesort")
+		algs.Set("quicksort")
+		algs.Set("radixsort")
+	}
 
 	// Read the input file
 	switch inFileFormat {
@@ -234,184 +272,199 @@ func main() {
 	}
 	fmt.Fprintf(fout, "ExecTimeAvg\n")
 
-	// Run bitonic sort
-	fmt.Printf("\tBitonic Sort:\n")
-	fmt.Fprintf(fout, "bitonicsort,")
-
-	// Setup variables to calculate the execution time averages
+	// Initialize variables to calculate the execution time averages
 	var execTimeAvg int = 0
 
-	// Run benchmarks
-	for i := 0; i <= runs; i++ {
-		// Append 0's to array to make its length exponential of 2
-		var diff int
-		arrOut, diff = bitonicsort.CheckAndAppendZeros(arrOut)
+	for _, alg := range algs {
+		switch alg {
+		case "bitonicsort":
+			// Run bitonic sort
+			fmt.Printf("\tBitonic Sort:\n")
+			fmt.Fprintf(fout, "bitonicsort,")
 
-		// Bitonic sort sorts in place, so pass arrOut to preserve arrIn
-		startTime := time.Now()
-		arrOut = bitonicsort.Sort(arrOut, diff)
-		execTime := time.Since(startTime)
+			// Setup variables to calculate the execution time averages
+			execTimeAvg = 0
 
-		// Ignore the first run because it is always artificially slower
-		if i > 0 {
-			fmt.Printf("\t\tExec time %d: %s\n", i, execTime)
-			fmt.Fprintf(fout, "%d,", int(execTime))
+			// Run benchmarks
+			for i := 0; i <= runs; i++ {
+				// Append 0's to array to make its length exponential of 2
+				var diff int
+				arrOut, diff = bitonicsort.CheckAndAppendZeros(arrOut)
 
-			// Add all times to average them
-			execTimeAvg += int(execTime)
+				// Bitonic sort sorts in place, so pass arrOut to preserve arrIn
+				startTime := time.Now()
+				arrOut = bitonicsort.Sort(arrOut, diff)
+				execTime := time.Since(startTime)
+
+				// Ignore the first run because it is always artificially slower
+				if i > 0 {
+					fmt.Printf("\t\tExec time %d: %s\n", i, execTime)
+					fmt.Fprintf(fout, "%d,", int(execTime))
+
+					// Add all times to average them
+					execTimeAvg += int(execTime)
+				}
+
+				// Copy arrIn to arrOut for the next iteration
+				copy(arrOut, arrIn)
+
+				// Sleep between runs to let the CPUs cool down
+				time.Sleep(sleepTime * time.Second)
+			}
+
+			// Calculate average
+			execTimeAvg = execTimeAvg / runs
+			fmt.Printf("\t\tExec time avg: %dns\n", execTimeAvg)
+			fmt.Fprintf(fout, "%d\n", execTimeAvg)
+
+		case "bricksort":
+			// Run brick sort
+			fmt.Printf("\tBrick Sort:\n")
+			fmt.Fprintf(fout, "bricksort,")
+
+			// Setup variables to calculate the execution time averages
+			execTimeAvg = 0
+
+			// Run benchmarks
+			for i := 0; i <= runs; i++ {
+				// Brick sort sorts in place, so pass arrOut to preserve arrIn
+				startTime := time.Now()
+				arrOut = bricksort.Sort(arrOut)
+				execTime := time.Since(startTime)
+
+				// Ignore the first run because it is always artificially slower
+				if i > 0 {
+					fmt.Printf("\t\tExec time %d: %s\n", i, execTime)
+					fmt.Fprintf(fout, "%d,", int(execTime))
+
+					// Add all times to average them
+					execTimeAvg += int(execTime)
+				}
+
+				// Copy arrIn to arrOut for the next iteration
+				copy(arrOut, arrIn)
+
+				// Sleep between runs to let the CPUs cool down
+				time.Sleep(sleepTime * time.Second)
+			}
+
+			// Calculate average
+			execTimeAvg = execTimeAvg / runs
+			fmt.Printf("\t\tExec time avg: %dns\n", execTimeAvg)
+			fmt.Fprintf(fout, "%d\n", execTimeAvg)
+
+		case "mergesort":
+			// Run mergesort
+			fmt.Printf("\tMergesort:\n")
+			fmt.Fprintf(fout, "mergesort,")
+
+			// Setup variables to calculate the execution time averages
+			execTimeAvg = 0
+
+			// Run benchmarks
+			for i := 0; i <= runs; i++ {
+				// Mergesort sorts in place, so pass arrOut to preserve arrIn
+				startTime := time.Now()
+				arrOut = mergesort.Sort(arrOut)
+				execTime := time.Since(startTime)
+
+				// Ignore the first run because it is always artificially slower
+				if i > 0 {
+					fmt.Printf("\t\tExec time %d: %s\n", i, execTime)
+					fmt.Fprintf(fout, "%d,", int(execTime))
+
+					// Add all times to average them
+					execTimeAvg += int(execTime)
+				}
+
+				// Copy arrIn to arrOut for the next iteration
+				copy(arrOut, arrIn)
+
+				// Sleep between runs to let the CPUs cool down
+				time.Sleep(sleepTime * time.Second)
+			}
+
+			// Calculate average
+			execTimeAvg = execTimeAvg / runs
+			fmt.Printf("\t\tExec time avg: %dns\n", execTimeAvg)
+			fmt.Fprintf(fout, "%d\n", execTimeAvg)
+
+		case "quicksort":
+			// Run quicksort
+			fmt.Printf("\tQuicksort:\n")
+			fmt.Fprintf(fout, "quickSort,")
+
+			// Setup variables to calculate the execution time averages
+			execTimeAvg = 0
+
+			// Run benchmarks
+			for i := 0; i <= runs; i++ {
+				// Quicksort sorts in place, so pass arrOut to preserve arrIn
+				startTime := time.Now()
+				arrOut = quicksort.Sort(arrOut)
+				execTime := time.Since(startTime)
+
+				// Ignore the first run because it is always artificially slower
+				if i > 0 {
+					fmt.Printf("\t\tExec time %d: %s\n", i, execTime)
+					fmt.Fprintf(fout, "%d,", int(execTime))
+
+					// Add all times to average them
+					execTimeAvg += int(execTime)
+				}
+
+				// Copy arrIn to arrOut for the next iteration
+				copy(arrOut, arrIn)
+
+				// Sleep between runs to let the CPUs cool down
+				time.Sleep(sleepTime * time.Second)
+			}
+
+			// Calculate average
+			execTimeAvg = execTimeAvg / runs
+			fmt.Printf("\t\tExec time avg: %dns\n", execTimeAvg)
+			fmt.Fprintf(fout, "%d\n", execTimeAvg)
+
+		case "radixsort":
+			// Run radix sort
+			fmt.Printf("\tRadix Sort:\n")
+			fmt.Fprintf(fout, "radixsort,")
+
+			// Setup variables to calculate the execution time averages
+			execTimeAvg = 0
+
+			// Run benchmarks
+			for i := 0; i <= runs; i++ {
+				// Radix sort overwrites the input array, so pass arrOut to preserve arrIn
+				startTime := time.Now()
+				arrOut = radixsort.Sort(arrOut, k)
+				execTime := time.Since(startTime)
+
+				// Ignore the first run because it is always artificially slower
+				if i > 0 {
+					fmt.Printf("\t\tExec time %d: %s\n", i, execTime)
+					fmt.Fprintf(fout, "%d,", int(execTime))
+
+					// Add all times to average them
+					execTimeAvg += int(execTime)
+				}
+
+				// Copy arrIn to arrOut for the next iteration
+				copy(arrOut, arrIn)
+
+				// Sleep between runs to let the CPUs cool down
+				time.Sleep(sleepTime * time.Second)
+			}
+
+			// Calculate average
+			execTimeAvg = execTimeAvg / runs
+			fmt.Printf("\t\tExec time avg: %dns\n", execTimeAvg)
+			fmt.Fprintf(fout, "%d\n", execTimeAvg)
+
+		default:
+			fmt.Printf("ERROR: %s is not a valid algoritm\nSkipping...\n", alg)
 		}
-
-		// Copy arrIn to arrOut for the next iteration
-		copy(arrOut, arrIn)
-
-		// Sleep between runs to let the CPUs cool down
-		time.Sleep(sleepTime * time.Second)
 	}
-
-	// Calculate average
-	execTimeAvg = execTimeAvg / runs
-	fmt.Printf("\t\tExec time avg: %dns\n", execTimeAvg)
-	fmt.Fprintf(fout, "%d\n", execTimeAvg)
-
-	// Run brick sort
-	fmt.Printf("\tBrick Sort:\n")
-	fmt.Fprintf(fout, "bricksort,")
-
-	// Setup variables to calculate the execution time averages
-	execTimeAvg = 0
-
-	// Run benchmarks
-	for i := 0; i <= runs; i++ {
-		// Brick sort sorts in place, so pass arrOut to preserve arrIn
-		startTime := time.Now()
-		arrOut = bricksort.Sort(arrOut)
-		execTime := time.Since(startTime)
-
-		// Ignore the first run because it is always artificially slower
-		if i > 0 {
-			fmt.Printf("\t\tExec time %d: %s\n", i, execTime)
-			fmt.Fprintf(fout, "%d,", int(execTime))
-
-			// Add all times to average them
-			execTimeAvg += int(execTime)
-		}
-
-		// Copy arrIn to arrOut for the next iteration
-		copy(arrOut, arrIn)
-
-		// Sleep between runs to let the CPUs cool down
-		time.Sleep(sleepTime * time.Second)
-	}
-
-	// Calculate average
-	execTimeAvg = execTimeAvg / runs
-	fmt.Printf("\t\tExec time avg: %dns\n", execTimeAvg)
-	fmt.Fprintf(fout, "%d\n", execTimeAvg)
-
-	// Run mergesort
-	fmt.Printf("\tMergesort:\n")
-	fmt.Fprintf(fout, "mergesort,")
-
-	// Setup variables to calculate the execution time averages
-	execTimeAvg = 0
-
-	// Run benchmarks
-	for i := 0; i <= runs; i++ {
-		// Mergesort sorts in place, so pass arrOut to preserve arrIn
-		startTime := time.Now()
-		arrOut = mergesort.Sort(arrOut)
-		execTime := time.Since(startTime)
-
-		// Ignore the first run because it is always artificially slower
-		if i > 0 {
-			fmt.Printf("\t\tExec time %d: %s\n", i, execTime)
-			fmt.Fprintf(fout, "%d,", int(execTime))
-
-			// Add all times to average them
-			execTimeAvg += int(execTime)
-		}
-
-		// Copy arrIn to arrOut for the next iteration
-		copy(arrOut, arrIn)
-
-		// Sleep between runs to let the CPUs cool down
-		time.Sleep(sleepTime * time.Second)
-	}
-
-	// Calculate average
-	execTimeAvg = execTimeAvg / runs
-	fmt.Printf("\t\tExec time avg: %dns\n", execTimeAvg)
-	fmt.Fprintf(fout, "%d\n", execTimeAvg)
-
-	// Run quicksort
-	fmt.Printf("\tQuicksort:\n")
-	fmt.Fprintf(fout, "quickSort,")
-
-	// Setup variables to calculate the execution time averages
-	execTimeAvg = 0
-
-	// Run benchmarks
-	for i := 0; i <= runs; i++ {
-		// Quicksort sorts in place, so pass arrOut to preserve arrIn
-		startTime := time.Now()
-		arrOut = quicksort.Sort(arrOut)
-		execTime := time.Since(startTime)
-
-		// Ignore the first run because it is always artificially slower
-		if i > 0 {
-			fmt.Printf("\t\tExec time %d: %s\n", i, execTime)
-			fmt.Fprintf(fout, "%d,", int(execTime))
-
-			// Add all times to average them
-			execTimeAvg += int(execTime)
-		}
-
-		// Copy arrIn to arrOut for the next iteration
-		copy(arrOut, arrIn)
-
-		// Sleep between runs to let the CPUs cool down
-		time.Sleep(sleepTime * time.Second)
-	}
-
-	// Calculate average
-	execTimeAvg = execTimeAvg / runs
-	fmt.Printf("\t\tExec time avg: %dns\n", execTimeAvg)
-	fmt.Fprintf(fout, "%d\n", execTimeAvg)
-
-	// Run radix sort
-	fmt.Printf("\tRadix Sort:\n")
-	fmt.Fprintf(fout, "radixsort,")
-
-	// Setup variables to calculate the execution time averages
-	execTimeAvg = 0
-
-	// Run benchmarks
-	for i := 0; i <= runs; i++ {
-		// Radix sort overwrites the input array, so pass arrOut to preserve arrIn
-		startTime := time.Now()
-		arrOut = radixsort.Sort(arrOut, k)
-		execTime := time.Since(startTime)
-
-		// Ignore the first run because it is always artificially slower
-		if i > 0 {
-			fmt.Printf("\t\tExec time %d: %s\n", i, execTime)
-			fmt.Fprintf(fout, "%d,", int(execTime))
-
-			// Add all times to average them
-			execTimeAvg += int(execTime)
-		}
-
-		// Copy arrIn to arrOut for the next iteration
-		copy(arrOut, arrIn)
-
-		// Sleep between runs to let the CPUs cool down
-		time.Sleep(sleepTime * time.Second)
-	}
-
-	// Calculate average
-	execTimeAvg = execTimeAvg / runs
-	fmt.Printf("\t\tExec time avg: %dns\n", execTimeAvg)
-	fmt.Fprintf(fout, "%d\n", execTimeAvg)
 
 	// Close output file
 	fout.Close()
