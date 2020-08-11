@@ -11,13 +11,19 @@
 #SBATCH --mail-type=all    # Send email at begin and end of job
 
 # Jobs to run
+input_dir="./input" # Input directory for automated input file detection
+shopt -s nullglob # Avoid unmatched patterns to expand as result values
 # Add space separated list of input files in the input array. The files must
 # have the word "input" (all lower-case) in their path (if they are inside the
 # input directory this is already satisfied). The output files will be saved to
 # files with a path where the "input" words in the path have been replaced with
 # "output". For example, the output for input file "./input/input_1K.txt" will
 # be saved to file "./output/output_1K.txt".
-input=("./input/input_1K.txt" "./input/input_10K.txt")
+#
+#input=("./input/input_1K.txt" "./input/input_10K.txt")
+#
+# The default case, automatically inputs all of the files in the ${input_dir}.
+input=("${input_dir}"/*)
 format=1 # 0 for CSV, 1 for 1 array entry per line format
 procs=(1 2 4 12 24 36 48) # Max number of processors to run a test
 runs=100 # Number of runs per input per procs
@@ -36,8 +42,10 @@ echo ""
 echo "Running jobs..."
 for i in ${input[@]}; do
 	for p in ${procs[@]}; do
-		echo "Job: Input: ${i} Output: ${i//input/output} Procs: ${p} Runs: ${runs}"
-		~/go/bin/comparealgs -input=${i} -format=${format} -output=${i//input/output} -procs=${p} -runs=${runs}
+		output=${i//input/output}         # Replace `input` with `output`
+		output=${output//.txt/_p${p}.txt} # Replace `.txt` with `_p#.txt`
+		echo "Job: Input: ${i} Output: ${output} Procs: ${p} Runs: ${runs}"
+		~/go/bin/comparealgs -input=${i} -format=${format} -output=${output} -procs=${p} -runs=${runs}
 	done
 done
 
