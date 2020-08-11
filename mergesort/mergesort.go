@@ -75,11 +75,8 @@ func parallelMergesort(s []int) {
 	len := len(s)
 
 	if len > 1 {
-		if len <= max {
-			mergesort(s)
-		} else {
-			middle := len / 2
 
+			middle := len / 2
 			var wg sync.WaitGroup
 			wg.Add(2)
 
