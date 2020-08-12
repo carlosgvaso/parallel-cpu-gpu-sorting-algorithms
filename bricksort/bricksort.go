@@ -24,6 +24,7 @@ func Sort(arr []int) []int {
 		for i := 1; i < n; i += 2 {
 			waitGroup.Add(1)
 			go swap(arr, i, &isSorted, &waitGroup)
+			
 		}
 		waitGroup.Wait()
 
@@ -49,3 +50,4 @@ func swap(arr []int, i int, isSorted *bool, waitGroup *sync.WaitGroup) {
 		*isSorted = false
 	}
 }
+

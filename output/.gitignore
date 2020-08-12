@@ -1,4 +1,4 @@
 # Output gitignore
 
 ## Output data files inside directory
-*.txt
+#*.txt

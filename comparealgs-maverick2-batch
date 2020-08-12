@@ -5,9 +5,9 @@
 #SBATCH -p v100            # Queue (partition) name
 #SBATCH -N 1               # Total # of nodes
 #SBATCH -n 48              # Total # of mpi tasks or cores(?)
-#SBATCH -t 05:00:00        # Run time (hh:mm:ss)
+#SBATCH -t 23:45:00        # Run time (hh:mm:ss)
 #SBATCH -A EE-382C-EE-361C-Mult # Allocation name
-#SBATCH --mail-user=user@email.com # Replace by your email
+#SBATCH --mail-user=uvardan@utexas.edu # Replace by your email
 #SBATCH --mail-type=all    # Send email at begin and end of job
 
 # Jobs to run
@@ -25,8 +25,8 @@ shopt -s nullglob # Avoid unmatched patterns to expand as result values
 # The default case, automatically inputs all of the files in the ${input_dir}.
 input=("${input_dir}"/*)
 format=1 # 0 for CSV, 1 for 1 array entry per line format
-procs=(1 2 4 12 24 36 48) # Max number of processors to run a test
-runs=100 # Number of runs per input per procs
+procs=(1 24 48) # Max number of processors to run a test
+runs=10 # Number of runs per input per procs
 
 echo "Date: $(date)"
 echo "Working directory: $(pwd)"
@@ -45,7 +45,7 @@ for i in ${input[@]}; do
 		output=${i//input/output}         # Replace `input` with `output`
 		output=${output//.txt/_p${p}.txt} # Replace `.txt` with `_p#.txt`
 		echo "Job: Input: ${i} Output: ${output} Procs: ${p} Runs: ${runs}"
-		~/go/bin/comparealgs -input=${i} -format=${format} -output=${output} -procs=${p} -runs=${runs}
+		~/go/bin/comparealgs -input=${i} -format=${format} -output=${output} -procs=${p} -runs=${runs} -alg=bitonicsort -alg=mergesort -alg=quicksort -alg=radixsort
 	done
 done
 
